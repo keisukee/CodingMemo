@@ -70,7 +70,7 @@ config/application.rbを開き、
 
 書き込んで動作確認した段階で一旦コミット
 
-# rails generate/destroy
+# rails generate/destroy migration
 ## controller
 コントローラー名は複数形で、頭文字を大文字にする。
 - indexアクションを持つUsersコントローラーを作るときは次のように入力する。
@@ -89,7 +89,17 @@ Userにemailを追加したいとき
 $ rails g migration add_email_to_users(or AddEmailToUsers)
 ---
 def change
-  add_index :users, :email, unique: true
+  add_column :users, :email, :string
+end
+---
+
+- カラムを変更するとき
+rails generate migration rename_titre_column_to_books
+---
+class RenamePiblishedColumnToBooks < ActiveRecord::Migration
+  def change
+    rename_column :books, :titre, :title
+  end
 end
 ---
 
@@ -151,3 +161,17 @@ end
 = link_to link_path, target: "_blank" do_
   = image_tag image_path // なぜか_を入れると色がおかしくなる。本当は、doのあとの_はいらない。当たり前だけど。さらに言うと、doはいらない。ブロックパラメータがないので。
 ---
+
+# controller action viewから取得したい
+<%= controller.controller_name %>
+<%= controller.action_name %>
+で取れる
+
+# 各controllerごとでstyle, cssを使い分けたい時
+application.html.erbで、
+<body class='<%= "#{controller.controller_name} #{controller.controller_name}-#{controller.action_name}"%>'>
+とすると、css側から各controllerごとにstyleを当てられるし、まとめて当てることもできる
+
+# render header footer
+<%= render 'layout/header' %>
+でいける
