@@ -206,3 +206,53 @@ data_sets = [[50, 10],[50, 50],[50, 100], [50, 500], [50, 1000]]
 for data in data_sets:
     data[0] <- data_sets[i]、つまり、配列がdataに入る
     data[1]
+
+# クラスを調べる
+type(x)で調べられる
+
+# for文注意点
+```
+for i in x:
+    print(i)
+    if float(40) < x[i] < float(60):
+        ctr.append(x[i])
+```
+上記のコードでは、各回のループでは、iはindexを指すと思っていたがpythonでは違うらしい。iに入るのは、実際のx[i]の数字。
+だから、1..100のようにしたいのなら、
+
+```
+for i in range(0..100):
+    print(i)
+    if float(40) < x[i] < float(60):
+        ctr.append(x[i])
+```
+としなければならない。
+
+# ベンチマークを測る
+ファイル全体の時間を測定する方法
+`time python script.py`
+でいける
+
+# if break
+二重for文の中から脱出したいときなど
+```
+for i in range(0, 100): # 100はデータの分割個数
+    data_list.append([])
+    for j in range(0, sample_amount):
+        if i <= x[j] <= i + 1:
+            data_list[i].append(x[j])
+        elif x[j] > i + 1:
+            break
+```
+でbreakできる
+
+# math log sin cos e sqrt 数学計算
+import math
+
+math.log(x)
+math.cos(x)
+
+import numpy as np
+np.e
+np.pi
+np.sqrt(x)
