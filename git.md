@@ -23,3 +23,6 @@ $ git revert コミットのハッシュ値
 
 ## 上書き
 git commit --amend
+
+## remote urlを確認
+git remote -v
