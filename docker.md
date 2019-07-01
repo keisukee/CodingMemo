@@ -109,3 +109,76 @@ production:
 2. up
 3. db:create
 4. down
+
+# ログを確認したいとき
+docker-compose ps
+でコンテナの名前を確認
+docker logs { コンテナの名前 }
+でログが見られる
+
+# コマンド一覧
+Dockerfileからbuild
+docker-compose build
+
+アプリを立ち上げ
+docker-compose up
+
+バックグラウンドでサーバーを起動（Terminalの画面を分割する必要がなくなる）
+docker-compose up -d
+
+webというのは、docker-compose.ymlにあるservicesのこと
+rails db:create
+docker-compose run web rails db:create
+
+rails db:migrate
+docker-compose run web rails db:migrate
+
+webコンテナの中に入る
+docker exec -it nukistagram_web_1 bash
+
+↑のコマンドを打ってから↓のコマンドを打つとconsoleに入れる
+[bash]rails c
+
+コンテナの削除
+docker rm a403ffe73d31
+
+コンテナを一括削除。docker ps -aで出てくる各イメージをdocker rmの引数にしている
+docker rm "$(docker ps -a)"
+
+起動しているコンテナ一覧
+docker ps
+
+現状のコンテナの確認(すべて)
+docker ps -a
+
+現状のイメージの確認
+docker images
+
+イメージの削除
+docker rmi 2f37bab81128
+
+イメージを一括削除。docker ps -aで出てくる各イメージをdocker rmの引数にしている
+docker rmi "$(docker images)"
+
+rails new
+docker-compose run web rails new . --force --database=mysql --skip-bundle
+
+herokuにてconsoleを立ち上げたいとき
+heroku run docker-compose run web rails c
+
+# consoleへの入り方
+
+docker-compose run web rails console
+でいける。もしくは、
+
+docker psとうつ
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                               NAMES
+aae3a56fb972        follop-server_web   "/bin/sh -c 'rm -f /…"   7 minutes ago       Up 7 minutes        0.0.0.0:3000->3000/tcp              follop-server_web_1
+1a0039787428        mysql:5.7           "docker-entrypoint.s…"   7 minutes ago       Up 7 minutes        0.0.0.0:3306->3306/tcp, 33060/tcp   follop-server_db_1
+
+
+`$ docker exec -it (CONTAINER ID/NAMES) bash`
+
+そして、
+rails c
+でイケる
