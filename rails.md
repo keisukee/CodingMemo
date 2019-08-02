@@ -42,6 +42,12 @@ $ bundle install --path vendor/bundle --without staging production --jobs=4
 
 と打っておき、bundle installを高速化する。--jobs=4で並列処理。--without staging productionで、ST、本番環境のgemは後回しに。
 
+## 既存のhtmlファイルやerbをhaml, slimに一括で変更する
+gem 'html2slim'
+をインストール
+後、
+`for i in app/views/**/*.erb; do erb2slim $i ${i%erb}slim && rm $i; done`
+
 # gem の実行
 $ bundle exec gem hogehoge
 直でgem hogehogeとやってしまうとシステムにインストールされたgemを参照してしまうので.
@@ -364,6 +370,21 @@ controllerがネストされているとき、[:admins, @video]のように書�
       = form.text_field :tag_name
     %li
       = form.submit 'スクレイピング'
+
+```
+= form_with url: clients_shop_path(shop) do |form|
+  li
+    p 店舗名
+    = form.text_field :name, placeholder: '入力してください'
+  li
+    p 電話番号
+    = form.text_field :phone_number, placeholder: '入力してください'
+  li
+    p 住所
+    = form.text_field :zip_code, placeholder: '郵便番号'
+    span <br>
+    = form.text_field :address, placeholder: '東京都渋谷区〇〇丁目〇〇'
+```
 ```
 ## 年月などを入力させるselectボックス
 ```
@@ -410,12 +431,19 @@ Article.update([1, 2], [{ title: 'title1', body: 'body1' }, { title: 'title2', b
 # 部分テンプレート partial
 <%= render :partial => "article", :locals => { title: @article.title } %>
 
+= render '/layouts/aside_bar', shop: @shop
+
+
 # before_action
 before_action :require_login, only: [:new, :create]
 
 # strong parameters ストロングパラメータ permit
 def video_params
   params.require(:video).permit(:title, :url, :duration)
+end
+
+def user_params
+ params.require(:user).permit(:name, :email, :password)
 end
 
 # rspec テスト セットアップ
@@ -829,3 +857,154 @@ multiply_lambda3.call(3, 5)
 divide_lambda = lambda { |a, b| p a / b }
 divide_lambda.call(3, 5.0)
 ```
+
+# flash message
+
+## flash[]
+次のリクエストまで。リダイレクトを伴うとき
+```controller.rb
+flash[:success] = '写真を投稿しました'
+flash[:danger] = '写真の投稿に失敗しました'
+flash[:notice] = 'お知らせ'
+flash[:aiueo] = '文字列を入力'
+```
+
+現在のリクエストまで。つまり、エラーメッセージなどを出力して、現在の画面からまだ遷移させたくないときに使う
+## flash.now[]
+```
+flash.now[:alert]
+```
+ # factory_bot FactoryBot rails consoleで実行したいとき
+ rails console -e testでtest環境のDBをいじれる
+ で、`FactoryBot.create(:hogehoge)`
+ でいける
+
+ # RSpec サンプル
+ ```
+ require 'rails_helper'
+RSpec.describe Api::V1::NotificationsController, type: :request do
+
+  describe '通知API', autodoc: true do
+      let!(:path) { '/api/v1/notifications' }
+      let!(:session_path) { '/api/v1/auth/sign_in' }
+      let!(:current_user) { create(:user) }
+      let!(:client) { create(:client) }
+      let!(:shop) { create(:shop, client: client) }
+      let!(:auth) { create(:auth, user: current_user)}
+
+      let!(:params) {
+        {
+          name: current_user.name,
+          email: current_user.email,
+          password: current_user.password
+        }
+      }
+
+    describe 'GET /v1/notifications' do
+
+      context '正常系(一般)' do
+
+        before do
+          login
+          # authがupdateされると通知が作られるが、rejectされるとauthがdestroyされるので、先にapprovedにしている
+          auth.update(status: 1) # approved
+          auth.update(status: 2) # rejected
+
+          post = Post.create(
+            url: "https://instagram.com" + "hogehoge",
+            provider: "instagram",
+            followers_count: 500,
+            status: "unapproved",
+            uid: "oigeji29",
+            user_id: current_user.id,
+            shop_id: shop.id
+          )
+          # postのstatusが1か2にupdateされると通知が作られるが、rejectされるとauthがdestroyされるので、先にapprovedにしている
+          post.update(status: 1) # approved
+          post.update(status: 2) # rejected
+
+          auth_params = get_auth_params_from_login_response_headers(response)
+          get path, headers: auth_params
+        end
+
+        it '新規Shopがcreateされたときに通知がが返ってくる' do
+          notification = current_user.notifications.find_by(message: "新規店舗が追加されました")
+          expect(notification).to be_present
+        end
+
+        it 'Userのauthが承認されたときに通知が返ってくる' do
+          notification = current_user.notifications.find_by(message: "アカウントが承認されました")
+          expect(notification).to be_present
+        end
+
+        it 'Userのauthが承認されなかったときに通知が返ってくる' do
+          notification = current_user.notifications.find_by(message: "アカウントが承認されませんでした")
+          expect(notification).to be_present
+        end
+
+        it 'Userのpostが承認されたときに通知が返ってくる' do
+          notification = current_user.notifications.find_by(message: "投稿が承認されウォレットに入金されました")
+          expect(notification).to be_present
+        end
+
+        it 'Userのpostが承認されなかったときに通知が返ってくる' do
+          notification = current_user.notifications.find_by(message: "投稿が承認されませんでした")
+          expect(notification).to be_present
+        end
+
+        it 'ステータスコード 200 Success が返ってくる' do
+          expect(response.status).to eq(200)
+        end
+
+      end
+
+    end
+
+    describe 'GET /v1/notifications/:id' do
+
+      before do
+        login
+        auth_params = get_auth_params_from_login_response_headers(response)
+        id = current_user.notifications.first.id
+        get "/api/v1/notifications/#{id}", headers: auth_params
+      end
+
+      it '確認した通知のstatusがread(既読)になっている' do
+        notification = current_user.notifications.first
+        expect(notification).to be_present
+        expect(notification.status).to eq('read')
+      end
+
+    end
+
+    def login
+      post session_path, params:  { "email": "#{current_user.email}", "password": "password" }.to_json, headers: { 'Content-Type' => 'application/json' }
+    end
+
+    def get_auth_params_from_login_response_headers(response)
+      client = response.headers['client']
+      token = response.headers['access-token']
+      expiry = response.headers['expiry']
+      token_type = response.headers['token-type']
+      uid = response.headers['uid']
+
+      auth_params = {
+          'Content-Type' => 'application/json',
+          'access-token' => token,
+          'client' => client,
+          'uid' => uid,
+          'expiry' => expiry,
+          'token_type' => token_type
+      }
+      auth_params
+    end
+
+  end
+end
+```
+
+# dockerでDB接続
+host: 127.0.0.1
+password: password(docker-compose.ymlで設定したdbのパスワード)
+user: root
+データベース名: (nil)

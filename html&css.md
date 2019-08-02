@@ -36,14 +36,28 @@ background: #AAA image-url("/videos/show/play_button.png") center center/ 100px 
 
 # table
 <table>
-  <tr>
-    <th>無料プラン</th>
-    <th class="popular"><span class="inner"><span class="no1">人気No.1</span>初級プラン</span></th>
-    <th>上級プラン</th>
-  </tr>
-  <tr>
-    <td>¥0</td>
-    <td class="popular">¥5,000</td>
-    <td>¥8,000</td>
-  </tr>
-</table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>University</th>
+          <th>Birthday</th>
+          <th>Github</th>
+          <th>Twitter</th>
+          <th>Mail</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>大橋 啓介(Keisuke Ohashi)</td>
+          <td>早稲田大学 基幹理工学部 情報工学科</td>
+          <td>1998年9月17日</td>
+          <td>
+            <a href="https://github.com/keisukee">Github</a>
+          </td>
+          <td>
+            <a href="https://twitter.com/sukebeeeeei">@sukebeeeeei</a>
+          </td>
+          <td>kog71903[at]gmail.com</td>
+        </tr>
+      </tbody>
+    </table>

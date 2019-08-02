@@ -26,3 +26,9 @@ git commit --amend
 
 ## remote urlを確認
 git remote -v
+
+# 一旦保存 stash
+git stash -> diffを保存
+git stash list ->stashのlistを表示
+git stash drop stash@{0} -> stash のlistを削除
+git stash apply stash@{0} -> stashを適用
