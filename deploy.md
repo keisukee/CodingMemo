@@ -170,4 +170,57 @@ ssh -T git@github.com
   - `ssh -T github`でgithubに接続できることを確認
   - ``
 - githubにssh接続できるように鍵を生成
--
+
+# エラー対応
+- パッケージ mysql-serverは利用できません
+Amazon linux の場合に発生するかもしれない現象。デフォルトで入ってるMariaDBと競合しているっぽい。
+```
+$ sudo yum remove mariadb-libs
+$ sudo yum install mysql mysql-server mysql-devel
+$ sudo yum localinstall http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
+$ sudo yum -y install mysql-community-server
+```
+
+- nginxの設定ファイルが存在しない時
+```
+$ sudo amazon-linux-extras install nginx1.12
+$ nginx -v
+```
+
+# デプロイ時に叩くコマンド
+```
+1.PIDの確認
+ps -ef | grep unicorn | grep -v grep
+
+2.unicornの停止
+kill [PID]
+
+3.unicornが停止していることを確認
+ps -ef | grep unicorn | grep -v grep
+
+4.すでに生成されたプリコンパイルファイルの削除
+bundle exec rake assets:clobber RAILS_ENV=production
+
+5.プリコンパイルの実行
+rake assets:precompile RAILS_ENV=production
+
+6.unicornの再起動
+unicorn_rails -c /var/www/rails/App_name/config/unicorn.conf.rb -D -E production
+
+7.再起動していることを確認
+ps -ef | grep unicorn | grep -v grep
+
+8.nginxの再起動
+sudo nginx -s reload
+
+9.ブラウザで静的IPにアクセス
+→ HTTP ERROR 500と表示される
+
+10.log/nginx.error.log確認
+→config/secrets.ymlのSECRET_KEY_BASEがうまくセットされていない旨が書かれていた
+
+11.改めて、SECRET_KEY_BASEをセット (ここはなくてもいけるかも)
+SECRET_KEY_BASE= 適宜記入
+export SECRET_KEY_BASE
+env | grep SECRET_KEY_BASE
+```
