@@ -62,7 +62,7 @@ gem 'haml-rails'
 gem 'haml-rails'
 がGemfileに入っていることを確認したら、
 config/application.rbを開き、
----
+```
     config.generators do |g|
       g.stylesheets :sass
       g.javascripts false
@@ -71,7 +71,7 @@ config/application.rbを開き、
       # g.test_framework :rspec, view_specs: false, helper_specs: false, fixture: true
       # g.fixture_replacement :factory_girl, dir: "spec/support/factories"
     end
----
+```
 と書き込む。書き込み位置は、configが書いてあるところと同じ階層。
 
 書き込んで動作確認した段階で一旦コミット
@@ -80,45 +80,75 @@ config/application.rbを開き、
 ## controller
 コントローラー名は複数形で、頭文字を大文字にする。
 - indexアクションを持つUsersコントローラーを作るときは次のように入力する。
-$ rails g controller Users(controller名) index(action名)
+$ rails generate controller Users(controller名) index(action名)
 - destroyしたいとき。
 $ rails destroy ontroller Users(controller名) index(action名)
 
 ### ネストしたいとき
-`rails g controller admin::video`と打てばよい
+`rails generate controller admin::video`と打てばよい
 
 ## model
 モデル名は単数形で、頭文字を大文字にする。
 -  name、emailの2つの項目を持つUserモデルを作るとき。
-$ rails g model User name:string email:string
+$ rails generate model User name:string email:string
 
 - カラムを追加するとき
 行う処理+テーブル名
 Userにemailを追加したいとき
-$ rails g migration add_email_to_users(or AddEmailToUsers)
----
+$ rails generate migration add_email_to_users(or AddEmailToUsers)
+```
 def change
   add_column :users, :email, :string
 end
----
+```
 
 - カラムを変更するとき
 rails generate migration rename_titre_column_to_books
----
+```
 class RenamePiblishedColumnToBooks < ActiveRecord::Migration
   def change
     rename_column :books, :titre, :title
   end
 end
----
+```
 
 - テーブル名を変更するとき
-`rails g migration change_[old_table_name]_to_[new_table_name]`
+`rails generate migration change_[old_table_name]_to_[new_table_name]`
 
 def change
   rename_table :[old_table_name], :[new_table_name]
 end
 
+- カラムの型を変更したい時
+`rails generate migration ChangeNumberOfBankAccountInfo`
+
+カラムの型を変更するときは、migrationの前後の変化を記述する。でないと型が何から何に変わったかわからず、rollbackできなくなるため
+```
+class ChangeDatatypeNumberAndBranchNameOfBankAccountInfo < ActiveRecord::Migration[5.2]
+  def up
+    change_column :bank_account_infos, :number, :string
+  end
+
+  def down
+    change_column :bank_account_infos, :number, :integer
+  end
+end
+```
+
+# polymorphic関連付けを削除したい場合
+```migration
+  def up
+    change_table :books do |t|
+      t.remove_references :readable, polymorphic: true
+    end
+  end
+
+  def down
+    change_table :books do |t|
+      t.add_references :readable, polymorphic: true
+    end
+  end
+```
 # routes.rb
 ## root
 root 'controller#action'で/のpathを指定できる
@@ -136,23 +166,23 @@ $ ln -s /usr/local/opt/readline/lib/libreadline.dylib /usr/local/opt/readline/li
 # scrape スクレイピングしたデータをActiveRecordに保存したいとき
 rake task タスクを作成して、そこで処理をする。
 
-$ rails g task hogehoge
+$ rails generate task hogehoge
 tasks/hogehogeを開き、
----
+```
 namespece :hogehoge do
   task :some_name => :environment do // environmentがないとDBにアクセスできない
   User.create(name: , age: )
   logger = Logger.new('log/pornhub_videos.log') // logも取っておきたい
   logger.info "#{Time.now} -- blah-blah-blah: #{content}"
 end
----
+```
 で、terminal上で
 $ bundle exec rake hogehoge:some_name
 で処理が実行できる。
 
 ## scrape 画像 もってくる
 ex) naver_matome
----
+```
 url = 'http://matome.naver.jp/tech'
 
 doc.xpath('//li[@class="mdTopMTMList01Item"]').each do |node|
@@ -165,7 +195,7 @@ doc.xpath('//li[@class="mdTopMTMList01Item"]').each do |node|
   # 記事のサムネイル画像
   p node.css('a').attribute('href').value
 end
----
+```
 
 # image_tag 使い方
 - hamlの場合
@@ -176,10 +206,10 @@ end
 
 # image link 画像リンクを作る時
 - haml
----
+```
 = link_to link_path, target: "_blank" do_
   = image_tag image_path // なぜか_を入れると色がおかしくなる。本当は、doのあとの_はいらない。当たり前だけど。さらに言うと、doはいらない。ブロックパラメータがないので。
----
+```
 
 # link_to 書き方
 = link_to path, "text"
@@ -238,18 +268,226 @@ chomp: 文字列の末尾の改行コードのみを削除
 大きくわけて方法は二つ。
 1. has_many :through関連付け
 2. has_and_belongs_to_many関連付け
+## has_many :through
+```
+class User < ApplicationRecord
+  has_many :reviews
+  has_many :books, through: :reviews
+end
+
+class Review < ApplicationRecord
+  belongs_to :user
+  belongs_to :book
+end
+
+class Book < ApplicationRecord
+  has_many :reviews
+  has_many :users, through: :reviews
+end
+```
+- 新しくモデルを作成する場合
+```
+def change
+  create_table :users do |t|
+    t.string :name
+    t.timestamps
+  end
+
+  create_table :books do |t|
+    t.string :name
+    t.timestamps
+  end
+
+  create_table :books do |t|
+    t.belongs_to :user
+    t.belongs_to :book
+    t.timestamps
+  end
+end
+```
+- 既存のモデルに追加する場合
+```
+def change
+  add_reference :reviews, :book, foreign_key: true
+  add_reference :reviews, :user, foreign_key: true
+end
+```
+## has_and_belongs_to_many関連付け
 この方法の特徴としては、関連付けのために中間モデルを必要としないことになる。もちろん中間テーブルは必要となるが、それだけ。後は各modelに
 has_and_belongs_to_many :models
 と書いてやればそれだけで完了。
 
 videoモデルとtagモデルが存在していて、多対多の関係を作りたいとする。なおすでにvideoのMVCは作成済み
 このとき、まずTag Controllerの作成をし、そこからTagモデルの作成をし、最後に中間テーブルの作成をする。
-`rails g controller Tags index show destroy edit new create update`
-`rails g model Tag name:string`
-`rails g migration create_tags_videos tag:references video:references`
+`rails generate controller Tags index show destroy edit new create update`
+`rails generate model Tag name:string`
+`rails generate migration create_tags_videos tag:references video:references`
 なお、最後のコマンドを打つと、referencesになって外部キー制約が勝手に追加されるが、基本的にそのままで問題ない
 
 これでconsole上にて、video.tag_ids, tag.video_ids,でそれぞれのIDを取得できるとともに、video.tags, tag.videosでお互いのインスタンスが保有しているデータを引っ張ってこれる
+
+# 1対n 1:n has_many & belongs_to
+`rails generate model Author name:string`
+`rails generate model Book title:string pages:integer`
+`rails db:migrate`
+後に、
+```
+
+class Author < ApplicationRecord
+  has_many :books, dependent: :destroy
+end
+
+class Book < ApplicationRecord
+  belongs_to :author
+end
+```
+そして、外部キーをカラムとして追加する
+`rails generate migration add_author_id_to_books`
+```
+class AddAuthorIdToBooks < ActiveRecord::Migration[6.0]
+  def change
+    # 基本形: user_idという名前で users.id への外部キー制約をはる
+    add_reference :books, :author, foreign_key: true
+
+    # 応用形: user_id以外の名前(assignee_id)という名前で users.id への外部キー制約をはる
+    # add_reference :applicants, :assignee, foreign_key: { to_table: :users }
+  end
+end
+```
+
+# 1対1 1:1 has_one 他方のモデルと
+UserモデルとWalletモデルが作成済み
+```model
+class User < ApplicationRecord
+  has_one :wallet, dependent: :destroy
+end
+
+class Wallet < ApplicationRecord
+  belongs_to :user
+end
+```
+外部キーを作成
+`rails generate migration add_user_id_to_wallet`
+```
+class AddUserIdToWallet < ActiveRecord::Migration[6.0]
+  def change
+    add_reference :wallets, :user, foreign_key: true // has_one_and_belong_toだが、walletはテーブルの名前なので、walletsとする
+  end
+end
+```
+`user.wallet`
+`wallet.user`
+で取得ができる。また、`user.destroy`でwalletは消えるが、`wallet.destroy`としても、`user`は消えない
+
+# has_one :through association 1:1 & 1:1
+```
+class Supplier < ApplicationRecord
+  has_one :account
+  has_one :account_history, through: :account
+end
+
+class Account < ApplicationRecord
+  belongs_to :supplier
+  has_one :account_history
+end
+
+class AccountHistory < ApplicationRecord
+  belongs_to :account
+end
+```
+Supplier -> Account -> AccountHistory
+Account -> Supplier
+AccountHistory -> Account
+Supplier -> AccountHistory
+が成り立つ
+```
+class CreateAccountHistories < ActiveRecord::Migration[5.0]
+  def change
+    create_table :suppliers do |t|
+      t.string :name
+      t.timestamps
+    end
+
+    create_table :accounts do |t|
+      t.belongs_to :supplier
+      t.string :account_number
+      t.timestamps
+    end
+
+    create_table :account_histories do |t|
+      t.belongs_to :account
+      t.integer :credit_rating
+      t.timestamps
+    end
+  end
+end
+```
+# 1対1 1:1 has_one_through 同じモデル内で
+
+# n対n n:n has_many & has_many 違うモデルで
+## has_and_belongs_to_many * 2
+`rails generate model assemblies_parts assembly:references part:references`
+```
+class CreateAssembliesParts < ActiveRecord::Migration[6.0]
+  def change
+    create_table :assemblies_parts, id: false do |t|
+      t.references :assembly, index: true, null: false
+      t.references :part, index: true, null: false
+    end
+  end
+end
+```
+
+```model
+class Assembly < ApplicationRecord
+  has_and_belongs_to_many :parts
+end
+
+class Part < ApplicationRecord
+  has_and_belongs_to_many :assemblies
+end
+```
+
+これで、
+```
+assembly = Assembly.new(name: "assembly1")
+part = Part.new(name: "part1")
+assembly.parts << part
+
+assembly.parts -> partsが出てくる
+part.assemblies -> assembliesが出てくる
+```
+
+##
+
+# n対n n:n has_many & has_many 同じモデル内で
+# throughtを使いこなす
+
+# polymorphic 多態性を使うタイミング
+複数のbelongs_toが存在するとき
+
+テーブルを作成するタイミングでpolymorphicにする場合
+
+```
+class CreateReadBooks < ActiveRecord::Migration[5.2]
+  def change
+    create_table :read_books do |t|
+      t.string :title
+      t.integer :length
+      t.integer :pages
+
+      t.references :readable, polymorphic: true
+      # referencesの代わりに、id, type, indexを作ることでも作成可能
+      # t.bigint  :readable_id
+      # t.string  :readable_type
+
+      t.timestamps
+    end
+    # add_index :pictures, [:readable_type, :readable_id]
+  end
+end
+```
+
 
 # consoleで複数データを一括更新したいとき
 update_allを使うべし
@@ -423,7 +661,7 @@ def destroy
   redirect_to root_path
 end
 
-----
+```-
 
 %td= link_to '削除する', admins_video_path(video), method: :delete
 ```

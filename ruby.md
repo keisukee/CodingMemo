@@ -264,3 +264,142 @@ multiply_lambda3.call(3, 5)
 divide_lambda = lambda { |a, b| p a / b }
 divide_lambda.call(3, 5.0)
 ```
+
+# 暗号化 OpenSSL
+以下のメソッドを実行するとできる
+```
+len = ActiveSupport::MessageEncryptor.key_len
+salt = SecureRandom.random_bytes(len)
+secret_key = ActiveSupport::KeyGenerator.new('salary').generate_key(salt, len)
+crypt = ActiveSupport::MessageEncryptor.new(secret_key, cipher: 'aes-256-cbc')
+crypt.encrypt_and_sign("hogehoge")
+crypt.decrypt_and_verify("暗号")
+```
+
+結果は以下
+```
+[1] pry(main)> len = ActiveSupport::MessageEncryptor.key_len
+[2] pry(main)> salt = SecureRandom.random_bytes(len)
+=> "\xE2\xF5P:\x9Fdl>\x04\x8E\tz\xA7\xD0\x8B\b\x1Cb\xE7'2\xAE\xF71T\xC5\xCA\xEE \xF9\x01\xED"
+
+[3] pry(main)> secret_key = ActiveSupport::KeyGenerator.new('salary').generate_key(salt, len)
+=> "+\x98\e,\x14\xEB\xD4\xE4\xBAR\xFF)\x10\t$#`\x8B\x91B\xFE\xE8\xC2\x14K)qh\xDC\xF0\xF5\xC4"
+
+[4] pry(main)> crypt = ActiveSupport::MessageEncryptor.new(secret_key, cipher: 'aes-256-cbc')
+=> #<ActiveSupport::MessageEncryptor:0x000055ef6bfde548
+ @aead_mode=false,
+ @cipher="aes-256-cbc",
+ @digest="SHA1",
+ @options={:cipher=>"aes-256-cbc"},
+ @rotations=[],
+ @secret=
+  "+\x98\e,\x14\xEB\xD4\xE4\xBAR\xFF)\x10\t$#`\x8B\x91B\xFE\xE8\xC2\x14K)qh\xDC\xF0\xF5\xC4",
+ @serializer=Marshal,
+ @sign_secret=nil,
+ @verifier=
+  #<ActiveSupport::MessageVerifier:0x000055ef6bfde368
+   @digest="SHA1",
+   @options=
+    {:digest=>"SHA1",
+     :serializer=>
+      ActiveSupport::MessageEncryptor::NullSerializer},
+   @rotations=[],
+   @secret=
+    "+\x98\e,\x14\xEB\xD4\xE4\xBAR\xFF)\x10\t$#`\x8B\x91B\xFE\xE8\xC2\x14K)qh\xDC\xF0\xF5\xC4",
+   @serializer=
+    ActiveSupport::MessageEncryptor::NullSerializer>>
+
+[6] pry(main)> crypt.encrypt_and_sign("hogehoge")
+=> "bkoxOEltUU5nMFVzdk05RU1TWmRLSTMxYVh2c3pTWHZvRGdhZmRwK2M2OD0tLURwVmpCVmFZcEFsbitmcCtUUjd1eHc9PQ==--ff39f78c96c05db17a7658c2e03c0a30c20e94ed"
+
+[8] pry(main)> crypt.decrypt_and_verify("bkoxOEltUU5nMFVzdk05RU1TWmRLSTMxYVh2c3pTWHZvRGdhZmRwK2M2OD0tLURwVmpCVmFZcEFsbitmcCtUUjd1eHc9PQ==--ff39f78c96c05db17a7658c2e03c0a30c20e94ed")
+=> "hogehoge"
+```
+
+# private protected メソッドの違い
+public => どこからでもアクセス可能
+protected => クラス内、同一パッケージ、サブクラスからアクセス可
+private => クラス内のみアクセス可能
+
+制限無く公開したいなら public 。
+基本的に外部からは隠蔽するが、サブクラスやパッケージ内からのみ利用させたい場合は protected 。
+基本的に外部からは隠蔽し、クラス内からのみ利用させたい場合は private
+
+# include extend の違い
+- includeでは対象のクラスにincludeしたモジュールのメソッドがインスタンスメソッドとして組み込まれる
+- extendでは、対象のクラスにextendしたモジュールのメソッドがクラスメソッドとして組み込まれる
+
+## 例(example)
+
+module A, class B, class B_childがあったときに、B_childにてmodule Aをincludeすると、継承の順番としては、B_child -> A -> Bとなる
+include_test.rb
+```
+module Mod
+  def hello
+    'Hello'
+  end
+
+  def hoge
+    "called from module Mod"
+  end
+end
+
+class Hoge
+
+  def hoge
+    "called from class Hoge"
+  end
+end
+
+class HogeChild < Hoge
+  include Mod
+  # override
+  def test
+    self.hello
+  end
+
+  def hoge
+    super
+  end
+end
+
+hoge = Hoge.new
+p Hoge.ancestors
+p Mod.ancestors
+
+hoge_child = HogeChild.new
+p HogeChild.ancestors
+puts hoge_child.test
+puts hoge_child.hello
+puts hoge_child.hoge
+
+➜ ruby module_test.rb
+[Hoge, Object, Kernel, BasicObject]
+[Mod]
+[HogeChild, Mod, Hoge, Object, Kernel, BasicObject]
+Hello
+Hello
+called from module Mod
+```
+
+extend_test.rb
+```
+module Mod
+  def hello
+    'Hello'
+  end
+end
+
+class Obj
+  extend Mod
+end
+
+puts Obj.hello
+p Obj.ancestors 
+p Mod.ancestors
+
+➜ ruby extend_test.rb
+Hello
+[Obj, Object, Kernel, BasicObject]
+[Mod]
+```
