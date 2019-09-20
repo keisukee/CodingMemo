@@ -150,6 +150,55 @@ end
   end
 ```
 # routes.rb
+
+## namespace scope module 違いまとめ
+```
+namespace :admin do
+  resources :users
+end
+
+# rake routes
+        Prefix Verb   URI Pattern                     Controller#Action
+   admin_users GET    /admin/users(.:format)          admin/users#index
+               POST   /admin/users(.:format)          admin/users#create
+new_admin_user GET    /admin/users/new(.:format)      admin/users#new
+dit_admin_user GET    /admin/users/:id/edit(.:format) admin/users#edit
+    admin_user GET    /admin/users/:id(.:format)      admin/users#show
+               PATCH  /admin/users/:id(.:format)      admin/users#update
+               PUT    /admin/users/:id(.:format)      admin/users#update
+               DELETE /admin/users/:id(.:format)      admin/users#destroy
+
+scope module: :admin do
+  resources :users
+end
+
+# rake routes
+   Prefix Verb   URI Pattern               Controller#Action
+    users GET    /users(.:format)          admin/users#index
+          POST   /users(.:format)          admin/users#create
+ new_user GET    /users/new(.:format)      admin/users#new
+edit_user GET    /users/:id/edit(.:format) admin/users#edit
+     user GET    /users/:id(.:format)      admin/users#show
+          PATCH  /users/:id(.:format)      admin/users#update
+          PUT    /users/:id(.:format)      admin/users#update
+          DELETE /users/:id(.:format)      admin/users#destroy
+
+scope '/admin' do
+  resources :users
+end
+
+# rake routes
+   Prefix Verb   URI Pattern                     Controller#Action
+    users GET    /admin/users(.:format)          users#index
+          POST   /admin/users(.:format)          users#create
+ new_user GET    /admin/users/new(.:format)      users#new
+edit_user GET    /admin/users/:id/edit(.:format) users#edit
+     user GET    /admin/users/:id(.:format)      users#show
+          PATCH  /admin/users/:id(.:format)      users#update
+          PUT    /admin/users/:id(.:format)      users#update
+          DELETE /admin/users/:id(.:format)      users#destroy
+```
+
 ## root
 root 'controller#action'で/のpathを指定できる
 ## resources
@@ -157,6 +206,69 @@ root 'controller#action'で/のpathを指定できる
   root to: 'clients/home#index'
   resources :posts, only: [:index, :show, :destroy]
 ```
+## namespace
+```
+namespace :v3 do
+    get "/test/read",:to=>"test#read"
+end
+```
+と書くと
+
+```
+GET  /v3/test/read(.:format)    v3/test#read
+```
+
+## scope
+```
+scope :v3 do
+  get "/test/read",:to=>"test#read"
+end
+```
+と書くと
+```
+GET  /v3/test/read(.:format)    test#read
+```
+## resources意外のactionを追加したいとき
+例えば、videosコントローラーにrankingアクションを追加し、viewとして、videos/rankingというものを作りたいとする。このときは、
+rootingで、
+get 'videos/ranking', to: 'videos#ranking'
+としてあとはcontrollerにactionを追加してやればOK
+
+## member&collection
+memberは:idを伴うpathを追加する時
+```
+resources :photos do
+  member do
+    get :preview
+  end
+end
+-> /photos/:id/preview
+
+追加したいメンバルーティングが1つならonオプションを使うと1行でいける
+resouces :photos do
+  get :preview, on: :member
+end
+
+photos/:id/preview
+```
+
+collectionは:idを伴わないpathを追加する時
+```
+resources :photos do
+  collection do
+    get :search
+  end
+end
+-> /photos/search
+```
+# こちらもonオプションで1行に
+resouces :photos do
+  get :search, on: :collection
+end
+
+-> photos/search
+```
+
 # rails console readline
 - brew install readlineで、already installedと出た場合
 シンボリックが問題っぽい
@@ -354,7 +466,6 @@ class AddAuthorIdToBooks < ActiveRecord::Migration[6.0]
   end
 end
 ```
-
 # 1対1 1:1 has_one 他方のモデルと
 UserモデルとWalletモデルが作成済み
 ```model
@@ -461,8 +572,15 @@ part.assemblies -> assembliesが出てくる
 ##
 
 # n対n n:n has_many & has_many 同じモデル内で
-# throughtを使いこなす
+# throughを使いこなす
 
+## alias
+```
+class Book
+  has_many :users, through: :reviews
+  has_many :reviewd_users, through: :reviews, foreign_key: "user_id", class_name: "User"
+end
+```
 # polymorphic 多態性を使うタイミング
 複数のbelongs_toが存在するとき
 
@@ -526,11 +644,6 @@ REDIS.incr "videos/daily/#{Date.today.to_s}/#{@video.id}"
 
 などとしてやればよい
 
-# resources意外のactionを追加したいとき
-例えば、videosコントローラーにrankingアクションを追加し、viewとして、videos/rankingというものを作りたいとする。このときは、
-rootingで、
-get 'videos/ranking', to: 'videos#ranking'
-としてあとはcontrollerにactionを追加してやればOK
 
 # error エラー
 couldn't find (controller名) with 'id'=(action名)
@@ -670,15 +783,58 @@ end
 Article.update([1, 2], [{ title: 'title1', body: 'body1' }, { title: 'title2', body: 'body2' }])
 
 # 部分テンプレート partial
+```
 <%= render :partial => "article", :locals => { title: @article.title } %>
 
 = render '/layouts/aside_bar', shop: @shop
-
+```
 
 # before_action
+```
 before_action :require_login, only: [:new, :create]
+```
+
+# callbacks
+```
+before_validation
+after_validation
+before_save
+around_save
+before_create
+around_create
+after_create
+after_save
+after_commit/after_rollback
+
+- Updating a object
+before_validation
+after_validation
+before_save
+around_save
+before_update
+around_update
+after_update
+after_save
+after_commit/after_rollback
+
+- Destroying a object
+before_destroy
+around_destroy
+after_destroy
+after_commit/after_rollback
+```
+
+## 使用例
+```
+  before_save :normalize_card_number, if: :paid_with_card?
+
+  before_create do
+    self.name = login.capitalize if name.blank?
+  end
+```
 
 # strong parameters ストロングパラメータ permit
+```
 def video_params
   params.require(:video).permit(:title, :url, :duration)
 end
@@ -686,6 +842,16 @@ end
 def user_params
  params.require(:user).permit(:name, :email, :password)
 end
+```
+
+# set_resource
+```
+private
+
+def set_book
+  @book = Book.find(params[:id])
+end
+```
 
 # rspec テスト セットアップ
 ## installするgem
@@ -1034,3 +1200,76 @@ host: 127.0.0.1
 password: password(docker-compose.ymlで設定したdbのパスワード)
 user: root
 データベース名: (nil)
+
+# library module をrailsプロジェクト内で使うためには
+```config/application.rb
+  config.autoload_paths += %W(#{config.root}/lib) # add this line
+```
+
+```customer.rb
+class Customer < ActiveRecord::Base
+  include Foo
+end
+```
+
+```lib/foo.rb
+module Foo
+  def hello
+    "hello"
+  end
+end
+```
+これで、model内で、読み込んだmoduleがインスタンスメソッドとして使える
+
+## module内でクラスメソッドを定義したい場合
+```lib/some_module.rb
+module SomeModule
+  def self.hogehoge
+  end
+end
+```
+
+moduleからメソッドを呼び出すときには
+```model/some_model.rb
+class SomeModel
+  def fuga
+    SomeModule.hogehoge
+  end
+end
+```
+# 時間を扱いたい時
+railsではTimeWithZoneクラスを用いる
+```
+[32] pry(main)> t = Time.zone.now
+=> Sun, 15 Sep 2019 14:02:14 UTC +00:00
+[33] pry(main)> t.class
+=> ActiveSupport::TimeWithZone
+
+[18] pry(main)> t.beginning_of_year
+=> Tue, 01 Jan 2019 00:00:00 UTC +00:00
+
+[19] pry(main)> t.beginning_of_month
+=> Sun, 01 Sep 2019 00:00:00 UTC +00:00
+
+[20] pry(main)> t.end_of_month
+=> Mon, 30 Sep 2019 23:59:59 UTC +00:00
+
+[21] pry(main)> t.end_of_year
+=> Tue, 31 Dec 2019 23:59:59 UTC +00:00
+
+[29] pry(main)> 1.month.before
+=> Thu, 15 Aug 2019 14:03:23 UTC +00:00
+
+[31] pry(main)> 1.month.after - 1.month
+=> Sun, 15 Sep 2019 14:03:41 UTC +00:00
+```
+
+# where ? 条件で絞り込む 不等式
+```
+User.where(["created_at < ? and created_at > ?", 1.day.after, 1.day.ago])
+User.where(["? < created_at and created_at < ?", 1.day.ago, 1.day.after])
+```
+
+```
+Comment.where.not(receiver_id: nil).where.not(value: nil)
+```
