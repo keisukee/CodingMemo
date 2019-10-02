@@ -99,6 +99,7 @@ $ rails generate migration add_email_to_users(or AddEmailToUsers)
 ```
 def change
   add_column :users, :email, :string
+  remove_column :titles, :place, :string
 end
 ```
 
@@ -1060,9 +1061,9 @@ flash[:danger] = '写真の投稿に失敗しました'
 flash[:notice] = 'お知らせ'
 flash[:aiueo] = '文字列を入力'
 ```
+## flash.now[]
 
 現在のリクエストまで。つまり、エラーメッセージなどを出力して、現在の画面からまだ遷移させたくないときに使う
-## flash.now[]
 ```
 flash.now[:alert]
 ```
@@ -1272,4 +1273,19 @@ User.where(["? < created_at and created_at < ?", 1.day.ago, 1.day.after])
 
 ```
 Comment.where.not(receiver_id: nil).where.not(value: nil)
+```
+
+# child のレコード数でsort, order
+```
+book has_many reading_histories
+reading_history belongs_to book
+
+Book.select('books.*', 'count(reading_histories.id) AS users').left_joins(:reading_histories).group('books.id').order('users desc')
+```
+```
+Book.joins(:reading_histories).where(reading_histories: {status: "read"})
+```
+
+```Book.joins(:reading_histories).where(reading_histories: {status: "wish"}).select('books.*', 'count(reading_histories.id) AS users').group('books.id').order('users desc')
+
 ```

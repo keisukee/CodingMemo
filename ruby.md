@@ -395,7 +395,7 @@ class Obj
 end
 
 puts Obj.hello
-p Obj.ancestors 
+p Obj.ancestors
 p Mod.ancestors
 
 ➜ ruby extend_test.rb
