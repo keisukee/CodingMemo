@@ -1289,3 +1289,33 @@ Book.joins(:reading_histories).where(reading_histories: {status: "read"})
 ```Book.joins(:reading_histories).where(reading_histories: {status: "wish"}).select('books.*', 'count(reading_histories.id) AS users').group('books.id').order('users desc')
 
 ```
+
+# herokuデプロイ
+```
+# Herokuアプリを作成する
+$ heroku create <アプリ名>
+
+Creating app... done, ⬢ xxxxx-xxxxx-xxxxx
+https://xxxxx-xxxxx-xxxxx.herokuapp.com/ | https://git.heroku.com/xxxxx-xxxxx-xxxxx.git
+
+$ git remote add heroku https://git.heroku.com/xxxxx-xxxxx-xxxxx.git
+
+# remoteにherokuが追加されていることを確認する
+$ git remote
+
+$ git push heroku master
+
+# その他コマンド
+
+# 環境変数一覧
+$ heroku config
+
+# 環境変数名を指定して参照
+$ heroku config:get ENV_NAME
+
+# 環境変数を追加
+$ heroku config:set ENV_NAME="value"
+
+# 環境変数を削除
+$ heroku config:unset ENV_VAR_NAME
+```

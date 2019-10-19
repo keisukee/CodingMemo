@@ -151,3 +151,82 @@ for (var x = 8; x < 10; x++) {
   console.log("x = " + x);
 }
 ```
+
+# 連想配列
+```
+var data = { apple:150, orange:100, banana:120 };
+for (var key in data) {
+  console.log(key + '=' + data[key])
+}
+```
+
+# ループを途中でスキップ・中断
+```
+var result = 0;
+for (var i = 0; i <= 100; i++) {
+  result += i;
+  if (result > 1000) { break; }
+  if (i % 2 == 0) { continue; }
+}
+```
+
+# 例外を処理
+```
+var i = 1;
+try{
+  i = i * j;
+} catch(e) {
+  console.log(e.message);
+} finally {
+  console.log("処理は完了しました");
+}
+```
+
+# 関数
+```
+function getTriangle(base, height) {
+  return base * height / 2;
+}
+console.log(getTriangle(2, 5));
+```
+
+## コンストラクター経由
+```
+var getTriangle = new Function('base', 'height', 'return base * height / 2;');
+```
+
+## 関数リテラル表現
+```
+var getTriangle = function(base, height) {
+  return base * height / 2;
+};
+```
+
+## アロー関数
+```
+let getTriangle = (base, height) => {
+  return base * height / 2;
+}
+
+let getTriangle = (base, height) => base * height / 2; // 一行の場合はブロックを省略できる
+let getCircle = radius => radius * radius * Math.PI; // 引数が一つの場合はカッコを省略できる
+```
+
+# 引数のデフォルト値
+```
+function getTriangle(base = 1, height = 1) {
+  return base * height / 2;
+};
+```
+# クロージャー
+```
+function closure(init) {
+  var counter = init;
+  return function() {
+    return ++counter;
+  }
+}
+
+var myClosure1 = closure(1);
+var myClosure2 = closure(100);
+```
