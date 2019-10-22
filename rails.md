@@ -1,58 +1,62 @@
 # 新規Railsプロジェクトの作成手順
+```
 $ gem install rails
 $ rails new projece-app
-だと、システムのgemにインストールされてしまう。特定のプロジェクトごとに管理したい。
-gemはvendor/bundleに入れてbundle execで呼び出すのが良い。
+```
+だと、システムのgemにインストールされてしまう。特定のプロジェクトごとに管理したい。gemはvendor/bundleに入れてbundle execで呼び出すのが良い。
 
+```
 $ mkdir test-app
 $ cd test-app
 $ bundle init
-Writing new Gemfile to /path/to/project_name/Gemfile
+```
 
 次に生成されたGemfileを編集。
+```
 in Gemfile
+
 gem "rails"
+```
 
-bundle installする。
+bundle install
+```
 $ bundle install --path vendor/bundle
-
 $ bundle exec rails new . -B -d mysql --skip-turbolinks --skip-test
-
+```
 
 new .にすることでcurrent directoryに生成できる.
 
-オプション	効果
--d, --database=DATABASE	指定したデータベースに変更する（railsのデフォルトのDBはsqlite3）
---skip-turbolinks	turbolinksをオフにする　
---skip-test	railsのデフォルトのminitestというテストを使わない時に付ける。RSpecなどほかのテストフレームワークを利用したい時に使うと良い
-ｰB, --skip-bundle	Railsプロジェクト作成時にbundle installを行わないようにする
+オプション 効果
+- -d, --database=DATABASE	指定したデータベースに変更する（railsのデフォルトのDBはsqlite3）
+- --skip-turbolinks	turbolinksをオフにする
+- --skip-test	railsのデフォルトのminitestというテストを使わない時に付ける。RSpecなどほかのテストフレームワークを利用したい時に使うと良い
+- ｰB, --skip-bundle	Railsプロジェクト作成時にbundle installを行わないようにする
 
 そして、.gitignoreを編集
-https://www.gitignore.io/api/rails
+[https://www.gitignore.io/api/rails]
 をコピって来れば良し
 
-$ rails db:create
+`$ rails db:create`
 で忘れずにdatabaseを生成しておく
 
 最後にgit initして、レポジトリを作ってpushまでもっていけば完了
 
 どこかのタイミングで、
 
-$ bundle install --path vendor/bundle --without staging production --jobs=4
+`$ bundle install --path vendor/bundle --without staging production --jobs=4`
 
 と打っておき、bundle installを高速化する。--jobs=4で並列処理。--without staging productionで、ST、本番環境のgemは後回しに。
 
 ## 既存のhtmlファイルやerbをhaml, slimに一括で変更する
-gem 'html2slim'
-をインストール
-後、
+`gem 'html2slim'`をインストール後、
+
 `for i in app/views/**/*.erb; do erb2slim $i ${i%erb}slim && rm $i; done`
 
 # gem の実行
-$ bundle exec gem hogehoge
+`$ bundle exec gem hogehoge`
+
 直でgem hogehogeとやってしまうとシステムにインストールされたgemを参照してしまうので.
 e.g.) $ bundle exec rspec spec
-
 
 # Gemfile
 必須gemを列挙しておく
@@ -79,10 +83,13 @@ config/application.rbを開き、
 # rails generate/destroy migration
 ## controller
 コントローラー名は複数形で、頭文字を大文字にする。
-- indexアクションを持つUsersコントローラーを作るときは次のように入力する。
+```
+indexアクションを持つUsersコントローラーを作るとき
 $ rails generate controller Users(controller名) index(action名)
-- destroyしたいとき。
+
+destroyしたいとき
 $ rails destroy ontroller Users(controller名) index(action名)
+```
 
 ### ネストしたいとき
 `rails generate controller admin::video`と打てばよい
@@ -99,6 +106,8 @@ $ rails generate migration add_email_to_users(or AddEmailToUsers)
 ```
 def change
   add_column :users, :email, :string
+  add_column :accounts, :ssl_enabled, :boolean, default: true
+
   remove_column :titles, :place, :string
 end
 ```
@@ -309,7 +318,7 @@ doc.xpath('//li[@class="mdTopMTMList01Item"]').each do |node|
   p node.css('a').attribute('href').value
 end
 ```
-
+```
 # image_tag 使い方
 - hamlの場合
 = image_tag(画像のpath)
@@ -377,6 +386,25 @@ chomp: 文字列の末尾の改行コードのみを削除
 # foreign key 外部キー制約
 たとえばadd_foreign_key :posts, :usersの場合にはデータベースレベルでposts.user_idにusers.idにある値しか入れられないようにする（それ以外の値を入れようとすればエラーになる）、という仕組み
 
+# rails generate系のコマンド
+## Model/Migration
+### モデル作成
+`rails generate model User uuid:string:unique name:string`
+
+### テーブル名変更 リネーム
+```
+$ rails g migration RenameIssueToTask
+
+class RenameIssueToTask < ActiveRecord::Migration
+  def change
+    rename_table :issues, :tasks
+  end
+end
+```
+
+## Controller
+
+
 # 多対多 n:n n対nのモデルを作る
 大きくわけて方法は二つ。
 1. has_many :through関連付け
@@ -403,6 +431,10 @@ end
 def change
   create_table :users do |t|
     t.string :name
+    t.string  :label
+    t.text    :value
+    t.string  :type
+    t.integer :position
     t.timestamps
   end
 
