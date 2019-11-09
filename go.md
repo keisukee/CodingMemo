@@ -428,3 +428,27 @@ t := i.(T)
 ```
 
 # goroutine
+
+# closure クロージャ
+```
+func main() {
+	f := func(message string) {
+		fmt.Println(message)
+	}
+	f("Go to the party.")
+}
+```
+
+# 無名関数 anonymous function
+```
+func() {
+	fmt.Println("Functions anonymous")
+}()
+```
+# レシーバ
+```
+func (k kelvin) celsius() celsius { // (k kelvin)はレシーバ
+	return celsius(k - 273.15)
+}
+k.celsius() // celsiusが返り値として返ってくる
+```
