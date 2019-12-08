@@ -74,6 +74,15 @@ end
 numbers.each { |n| sum += n }
 ```
 
+# each_with_index
+```
+hash = Hash.new
+%w(cat dog wombat).each_with_index {|item, index|
+  hash[item] = index
+}
+hash   #=> {"cat"=>0, "dog"=>1, "wombat"=>2}
+```
+
 # map/collect文
 ```
 numbers = [1, 2, 3, 4, 5]

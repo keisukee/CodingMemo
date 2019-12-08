@@ -165,6 +165,16 @@ end
 ```
 namespace :admin do
   resources :users
+
+  # resources :usersは以下の7行と等価
+  get 'users/:id', to: 'users#show'
+  post 'users', to: 'users#create'
+  put 'users/:id', to: 'users#update'
+  delete 'users/:id', to: 'users#destroy'
+  get 'users', to: 'users#index'
+  get 'users/new', to: 'users#new'
+  get 'users/:id/edit', to: 'users#edit'
+
 end
 
 # rake routes
@@ -332,6 +342,11 @@ end
 = link_to link_path, target: "_blank" do_
   = image_tag image_path // なぜか_を入れると色がおかしくなる。本当は、doのあとの_はいらない。当たり前だけど。さらに言うと、doはいらない。ブロックパラメータがないので。
 ```
+# link_to でjavascriptのアクションを実行したいとき
+```
+<%= link_to "delete", book_path(book), method: :delete, onclick: 'alert("Please no!")' %>
+```
+ 
 
 # link_to 書き方
 = link_to path, "text"
