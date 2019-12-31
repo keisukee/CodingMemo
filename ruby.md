@@ -412,3 +412,15 @@ Hello
 [Obj, Object, Kernel, BasicObject]
 [Mod]
 ```
+
+# parse gsub
+```
+node.css('span.a-price-whole').inner_text.gsub(/,/, '').to_i
+url.gsub(/ref.+/, '')
+price.gsub(/,/, '').gsub(/￥/, '').to_i
+price.gsub!(/,/, '')
+price.gsub!(/円.+$/, '')
+price.gsub!(/\n/, '')
+line.gsub(/\n/, '')
+url.gsub!(/\?.*$/, "")
+```

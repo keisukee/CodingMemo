@@ -230,3 +230,18 @@ function closure(init) {
 var myClosure1 = closure(1);
 var myClosure2 = closure(100);
 ```
+# 時間差処理
+```
+setTimeout(function(){ alert("Hello"); }, 3000);
+```
+
+# 無限ループ
+```
+function timeout() {
+  setTimeout(function () {
+    distance += 10;
+    move(distance);
+    timeout();
+  }, 50);
+}
+```

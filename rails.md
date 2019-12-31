@@ -1366,3 +1366,10 @@ $ heroku config:set ENV_NAME="value"
 # 環境変数を削除
 $ heroku config:unset ENV_VAR_NAME
 ```
+# enumでわけたいとき
+```
+add_column :users, :status, :integer, default: 0
+
+user.rbにて
+enum status: { unpublished: 0, published: 1 }
+```
