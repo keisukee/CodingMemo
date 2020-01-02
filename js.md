@@ -202,7 +202,7 @@ var getTriangle = function(base, height) {
 };
 ```
 
-## アロー関数
+## アロー関数 arrow function
 ```
 let getTriangle = (base, height) => {
   return base * height / 2;
@@ -245,3 +245,126 @@ function timeout() {
   }, 50);
 }
 ```
+
+# class extends クラス継承
+```
+class Human {
+  constructor() {
+    this.gender = 'male';
+  }
+
+  printGender() {
+    console.log(this.gender);
+  }
+}
+
+class Male extends Human {
+  constructor() {
+    super();
+    this.name = 'max';
+    this.gender = 'female';
+  }
+
+  printName() {
+    console.log(this.name);
+  }
+}
+
+クラスを継承するとき、子クラスでconstructorを使うときは、必ず一番最初にsuper()を呼び出さないといけない
+```
+
+# ES6/ES7
+ES6系の書き方
+```
+class Human {
+  constructor() {
+    this.gender = 'male';
+  }
+
+  printGender() {
+    console.log(this.gender);
+  }
+}
+
+class Male extends Human {
+  constructor() {
+    super();
+    this.name = 'max';
+    this.gender = 'female';
+  }
+
+  printName() {
+    console.log(this.name);
+  }
+}
+
+```
+
+ES7系の書き方
+```
+class Human {
+  gender = 'male';
+
+  printGender = () => {
+    console.log(this.gender);
+  }
+}
+
+class Male extends Human {
+  name = 'max';
+  gender = 'female';
+
+  printName = () => {
+    console.log(this.name);
+  }
+}
+
+```
+
+# ... spread, rest
+spread
+```
+const array1 = [1, 2, 3];
+const array2 = [...array1, 4, 5]; // [1, 2, 3, 4, 5]になる
+```
+rest
+```
+const fileter = (...args) => {
+  return args.filter(el => el === 1);
+}
+
+console.log(filter(1, 2, 3)); // [1]
+```
+
+# destructuring
+```
+const numbers = [1, 2, 3];
+
+[num1, , num3] = numbers;
+console.log(num1, num3); // 1, 3
+```
+
+# 参照渡しと値渡し reference and primitive types refresher
+```
+let a = 10;
+let b = a;
+a = 11; // a = 11, b = 10
+
+let person = {name: 'hoge'};
+let person2 = person;
+person.name = 'fuga'; // person2も{name: 'fuga'}になる→person2に入っているのはポインターであり、person.nameはpersonが参照している先
+
+let person3 = {
+  ...person;
+}
+
+// person3はpersonのプロパティだけを完全にコピーしたオブジェクト。
+
+```
+
+# innerHTML, innerText, valueの違い
+Setting the value is normally used for input/form elements. innerHTML is normally used for div, span, td and similar elements.
+
+value applies only to objects that have the value attribute (normally, form controls).
+
+innerHtml applies to every object that can contain HTML (divs, spans, but many other and also form controls).
