@@ -424,3 +424,17 @@ price.gsub!(/\n/, '')
 line.gsub(/\n/, '')
 url.gsub!(/\?.*$/, "")
 ```
+
+# retry try next
+times = 2
+
+locations.each do |location|
+  try = 0
+  begin
+    scrape(location)
+    sleep 2
+  rescue
+    retry if try < times
+    next
+  end
+end

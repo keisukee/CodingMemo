@@ -21,3 +21,16 @@ export時にdefaultと指定すると、ファイルをimportするときには�
 # create-react-app
 今では`npm create-react-app hogehoge`は使えなくなったので、`npx create-react-app your_app_name`を使う
 
+# インラインスタイル
+```
+const style = {
+  minWidth: 64,       // 数値は"64px"のように、pxとして扱われます
+  lineHeight: "32px",
+  borderRadius: 4,
+  border: "none",
+  padding: "0 16px",
+  color: "#fff",
+  background: "#639"
+};
+export default (props) => <button style={style} {...props} />;
+```

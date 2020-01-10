@@ -368,3 +368,16 @@ Setting the value is normally used for input/form elements. innerHTML is normall
 value applies only to objects that have the value attribute (normally, form controls).
 
 innerHtml applies to every object that can contain HTML (divs, spans, but many other and also form controls).
+
+# setTimeout
+```
+function updateTimer(timer, startTime) {
+  setTimeout(function() {
+    if (isRunning === true) {
+      return;
+    }
+    timer.innerHTML = setTime(startTime);
+    updateTimer(timer, startTime);
+  }, 10);
+}
+```
