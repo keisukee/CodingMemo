@@ -514,6 +514,17 @@ class AddAuthorIdToBooks < ActiveRecord::Migration[6.0]
   end
 end
 ```
+
+モデルにリレーションを記入
+```
+class Author < ApplicationRecord
+  has_many :books
+end
+
+class Book < ApplicationRecord
+  belongs_to :author
+end
+```
 # 1対1 1:1 has_one 他方のモデルと
 UserモデルとWalletモデルが作成済み
 ```model

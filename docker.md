@@ -61,7 +61,7 @@ services:
       - db
 ```
 
-7. docker-compose run web rails new . --force --database=mysql --skip-bundle
+7. `docker-compose run web rails new . --force --database=mysql --skip-bundle --skip-test`
 8. database.ymlを修正 -> vim config/database.yml
 ```database.yml
 default: &default
